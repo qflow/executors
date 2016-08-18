@@ -58,7 +58,8 @@ public:
 
     std::future<T> _stdFuture;
     std::function<void(T)> _onReady;
-    std::atomic<bool> _isReady;
+    bool _isReady;
+    std::atomic_flag _readyLock = ATOMIC_FLAG_INIT;
     T _value;
 };
 template<>
@@ -72,7 +73,8 @@ public:
 
     std::future<void> _stdFuture;
     std::function<void()> _onReady;
-    std::atomic<bool> _isReady;
+    bool _isReady;
+    std::atomic_flag _readyLock = ATOMIC_FLAG_INIT;
 };
 
 template<typename T>
@@ -101,21 +103,16 @@ public:
     {
         return d_ptr->_stdFuture.get();
     }
-    bool is_ready() const
-    {
-        return d_ptr->_isReady.load();
-    }
     template<typename Func, typename R = std::result_of_t<Func(T)>>
     FutureBase<R> then(Func&& func);
 protected:
     void set_value(T value)
     {
+        while (d_ptr->_readyLock.test_and_set(std::memory_order_acquire));
         d_ptr->_value = value;
         d_ptr->_isReady = true;
-        if(d_ptr->_onReady)
-        {
-            d_ptr->_onReady(value);
-        }
+        if(d_ptr->_onReady) d_ptr->_onReady(value);
+        d_ptr->_readyLock.clear();
     }
 
 
@@ -142,17 +139,16 @@ public:
     {
         d_ptr->_stdFuture.wait();
     }
-    bool is_ready() const
-    {
-        return d_ptr->_isReady.load();
-    }
-    template<typename Func, typename R>
+    template<typename Func, typename R = std::result_of_t<Func()>>
     FutureBase<R> then(Func&& func);
 protected:
     void set_value()
     {
+        while (d_ptr->_readyLock.test_and_set(std::memory_order_acquire));
         d_ptr->_isReady = true;
         if(d_ptr->_onReady) d_ptr->_onReady();
+        d_ptr->_readyLock.clear();
+
     }
     std::shared_ptr<FutureBasePrivate<void>> d_ptr;
 };
@@ -187,7 +183,7 @@ void call(std::shared_ptr<Promise<R>> promise, Func&& func, T value)
     R resVal = func(value);
     promise->set_value(resVal);
 }
-template<typename R, typename T, typename Func>
+template<typename R, typename Func>
 void call(std::shared_ptr<Promise<R>> promise, Func&& func)
 {
     R resVal = func();
@@ -199,7 +195,7 @@ void call(std::shared_ptr<Promise<void>> promise, Func&& func, T value)
     func(value);
     promise->set_value();
 }
-template<typename T, typename Func>
+template<typename Func>
 void call(std::shared_ptr<Promise<void>> promise, Func&& func)
 {
     func();
@@ -212,7 +208,8 @@ FutureBase<R> FutureBase<T>::then(Func&& func)
 {
     auto promise = std::make_shared<Promise<R>>();
     FutureBase<R> future = promise->get_future();
-    if(is_ready())
+    while (d_ptr->_readyLock.test_and_set(std::memory_order_acquire));
+    if(d_ptr->_isReady)
     {
         call(promise, func, d_ptr->_value);
     }
@@ -222,6 +219,26 @@ FutureBase<R> FutureBase<T>::then(Func&& func)
             call(promise, func, value);
         };
     }
+    d_ptr->_readyLock.clear();
+    return future;
+}
+template<typename Func, typename R>
+FutureBase<R> FutureBase<void>::then(Func&& func)
+{
+    auto promise = std::make_shared<Promise<R>>();
+    FutureBase<R> future = promise->get_future();
+    while (d_ptr->_readyLock.test_and_set(std::memory_order_acquire));
+    if(d_ptr->_isReady)
+    {
+        call(promise, func);
+    }
+    else
+    {
+        d_ptr->_onReady = [promise,func](){
+            call(promise, func);
+        };
+    }
+    d_ptr->_readyLock.clear();
     return future;
 }
 }

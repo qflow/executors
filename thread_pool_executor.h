@@ -1,17 +1,20 @@
+#ifndef THREAD_POOL_EXECUTOR_H
+#define THREAD_POOL_EXECUTOR_H
 #include "executor_traits.h"
 #include "future.h"
 
 namespace QFlow{
+using task = std::function<void()>;
+class thread_pool_executor_private;
 class thread_pool_executor
 {
+    friend class thread_pool_thread;
 public:
-    using task = std::function<void()>;
     EXECUTORS_EXPORT thread_pool_executor(size_t num_threads = 10);
     ~thread_pool_executor();
     thread_pool_executor(const thread_pool_executor& other);
     void enqueueTask(task t);
 private:
-    class thread_pool_executor_private;
     const std::shared_ptr<thread_pool_executor_private> d_ptr;
 };
 }
@@ -53,3 +56,4 @@ public:
         return resF;
     }*/
 };
+#endif

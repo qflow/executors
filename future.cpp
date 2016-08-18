@@ -20,21 +20,4 @@ FutureBase<void> Promise<void>::get_future()
     d_ptr->_future = FutureBase<void>(std::move(stdFuture));
     return d_ptr->_future;
 }
-template<typename Func, typename R>
-FutureBase<R> FutureBase<void>::then(Func&& func)
-{
-    auto promise = std::make_shared<Promise<R>>();
-    FutureBase<R> future = promise->get_future();
-    if(is_ready())
-    {
-        call(promise, func);
-    }
-    else
-    {
-        d_ptr->_onReady = [promise,func](){
-            call(promise, func);
-        };
-    }
-    return future;
-}
 }
