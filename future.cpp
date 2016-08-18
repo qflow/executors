@@ -27,7 +27,6 @@ FutureBase<R> FutureBase<void>::then(Func&& func)
     FutureBase<R> future = promise->get_future();
     if(is_ready())
     {
-        qDebug() << "called on main";
         call(promise, func);
     }
     else

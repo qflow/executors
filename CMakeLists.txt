@@ -8,6 +8,9 @@ file(GLOB_RECURSE DATABASE_SRCS
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
 add_library(executors STATIC ${DATABASE_SRCS})
+if(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
+    target_link_libraries(executors pthread)
+endif()
 set_property(TARGET executors PROPERTY CXX_STANDARD 14)
 
 

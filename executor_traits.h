@@ -129,10 +129,4 @@ Factories... factories);
 template<class T>
 struct is_executor;
 
-template<class executor_type, class Function, class R = std::result_of_t<Function()>>
-executor_traits<executor_type>::future<R> async_execute(executor_type& ex, Function&& f)
-{
-    return executor_traits<executor_type>::async_execute(ex, f);
-}
-
 #endif

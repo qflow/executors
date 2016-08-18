@@ -101,7 +101,6 @@ void loop_executor::enqueueTask(task t)
     {
         std::unique_lock<std::mutex> lk(d_ptr->m);
         d_ptr->cv.notify_one();
-        cout << "*";
     }
     d_ptr->_state = state::AVAILABLE;
 }
