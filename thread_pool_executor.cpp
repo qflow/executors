@@ -48,12 +48,11 @@ void thread_pool_executor_private::main()
         {
             loop_executor thread = threads[i];
             auto f = executor_traits<loop_executor>::async_execute(thread, tasks[i]);
-            auto ff = f.then([this, thread](){
+            f.then([this, thread](){
                 while (_threadQueuelock.test_and_set(std::memory_order_acquire));
                 _threadQueue.push(thread);
                 _threadQueuelock.clear();
             });
-            ff.wait();
         }
 
 

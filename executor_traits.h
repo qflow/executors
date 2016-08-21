@@ -12,6 +12,8 @@ struct get_template_type<C<T>>
 {
     using type = T;
 };
+template <typename T>
+using get_template_type_t = typename get_template_type<T>::type;
 
 struct unknown_execution_tag {};
 struct unknown_future_tag {};

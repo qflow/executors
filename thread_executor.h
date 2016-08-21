@@ -17,11 +17,11 @@ public:
     using executor_type = QFlow::thread_executor;
     using execution_category = parallel_executor_tag;
     template<class T>
-    using future = QFlow::FutureBase<T>;
+    using future_type = QFlow::FutureBase<T>;
     template<class T>
     using promise_type = QFlow::Promise<T>;
     template<class Function>
-    static future<std::result_of_t<Function()>> async_execute(QFlow::thread_executor& ex, Function&& f)
+    static future_type<std::result_of_t<Function()>> async_execute(QFlow::thread_executor& ex, Function&& f)
     {
         auto p = std::make_shared<promise_type<std::result_of_t<Function()>>>();
         auto fut = p->get_future();
@@ -33,13 +33,13 @@ public:
         return fut;
     }
     template<class Function, class T, class R = std::result_of_t<Function(T)>>
-    static future<R> then_execute(executor_type& ex, Function&& f, future<T>& fut)
+    static future_type<R> then_execute(executor_type& ex, Function&& f, future_type<T>& fut)
     {
         auto promise = std::make_shared<promise_type<R>>();
         std::promise<int> p;
-        future<R> resF = promise->get_future();
+        future_type<R> resF = promise->get_future();
         fut.then([&ex, f, promise](T value){
-            future<R> fut2 = executor_traits<executor_type>::async_execute(ex, std::bind(f, value));
+            future_type<R> fut2 = executor_traits<executor_type>::async_execute(ex, std::bind(f, value));
             fut2.then([promise](R value2){
                 promise->set_value(value2);
             });

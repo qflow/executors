@@ -98,5 +98,58 @@ struct result_of_friendly<F, void>
 template< class F, class T>
 using result_of_friendly_t = typename result_of_friendly<F, T>::type;
 
+template<class Function, typename Executor>
+typename executor_traits<Executor>::template future_type<std::result_of_t<Function()>> async_execute(Executor& ex, Function&& f)
+{
+    return executor_traits<Executor>::async_execute(ex, f);
+}
+template<class Function, template<typename> class Future, class T, class Executor>
+typename executor_traits<Executor>::template future_type<result_of_friendly_t<Function, T>> then_execute(Executor& ex, Function&& f, Future<T>&& fut)
+{
+    return executor_traits<Executor>::then_execute(ex, f, std::forward<Future<T>>(fut));
+}
+
+template<typename V, typename Function>
+static int for_each_impl(V&& value, Function&& f)
+{
+    f(std::forward<V>(value));
+    return 0;
+}
+template<typename... Values, typename Function>
+static void for_each(Function&& f, Values&&... values)
+{
+    int arr[sizeof...(values)] = {for_each_impl<Values, Function>(std::forward<Values>(values),
+                                                                  std::forward<Function>(f))...};
+}
+template<typename T, size_t size>
+constexpr bool isSize()
+{
+    return std::tuple_size<T>::value == size;
+}
+
+
+template <class F, size_t... Is>
+constexpr auto index_apply_impl(F f,
+                                std::index_sequence<Is...>) {
+    return std::make_tuple(f(std::integral_constant<size_t, Is>())...);
+}
+
+template <size_t N, class F>
+constexpr auto index_apply(F f) {
+    return index_apply_impl(f, std::make_index_sequence<N>{});
+}
+
+template <class Tuple, class F, size_t... Is>
+constexpr auto apply_impl(Tuple t, F f,
+                          std::index_sequence<Is...>) {
+    return std::make_tuple(f(std::integral_constant<size_t, Is>(), std::get<Is>(t))...);
+}
+
+template <class Tuple, class F>
+constexpr auto apply(Tuple t, F f) {
+    return apply_impl(
+        t, f, std::make_index_sequence<std::tuple_size<Tuple>::value>{});
+}
+
 
 #endif
