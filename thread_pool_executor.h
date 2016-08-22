@@ -67,7 +67,7 @@ public:
         std::shared_ptr<std::atomic<size_t>> counter = std::make_shared<std::atomic<size_t>>(sizeof...(futures));
 
         apply(futuresTuple, [counter, promise, resultTuple](auto idx, auto&& future){
-            if(std::is_same<get_template_type_t<std::remove_reference_t<decltype (future)>>, bool>::value)
+            if(std::is_same<get_template_type_t<decltype (future)>, bool>::value)
             {
                 int t=0;
             }
