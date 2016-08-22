@@ -1,12 +1,11 @@
 #ifndef STANDARD_EXECUTOR_TRAITS_H
 #define STANDARD_EXECUTOR_TRAITS_H
 #include "executor_traits.h"
-#include <type_traits>
 
-template<typename R, typename F, typename P>
+template<typename R, typename Function, typename Promise_ptr>
 struct Call
 {
-static std::function<void()> get_task(F f, P p)
+static std::function<void()> get_task(Function f, Promise_ptr p)
 {
     std::function<void()> task = [p, f](){
         auto res = f();
@@ -150,57 +149,5 @@ constexpr auto apply(Tuple t, F f) {
     return apply_impl(
         t, f, std::make_index_sequence<std::tuple_size<Tuple>::value>{});
 }
-
-
-
-template<typename T>
-struct tuple_v
-{
-    using type = std::tuple<T>;
-    type create(T&& arg)
-    {
-        return type(std::forward<T>(arg));
-    }
-    type create()
-    {
-        return type();
-    }
-};
-template<>
-struct tuple_v<void>
-{
-    using type = std::tuple<>;
-    type create()
-    {
-        return type();
-    }
-};
-template<>
-struct tuple_v<char>
-{
-    using type = std::tuple<>;
-    type create(char)
-    {
-        return type();
-    }
-    type create()
-    {
-        return type();
-    }
-};
-
-
-template<typename... T>
-constexpr decltype(auto) make_empty_tuple_v()
-{
-    return std::tuple_cat(tuple_v<T>().create()...);
-}
-template<typename... T>
-constexpr decltype(auto) make_tuple_v(T&&... args)
-{
-    return std::tuple_cat(tuple_v<T>().create(std::forward<T>(args))...);
-}
-
-
 
 #endif

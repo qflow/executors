@@ -1,19 +1,9 @@
 #ifndef EXECUTOR_TRAITS_H
 #define EXECUTOR_TRAITS_H
+#include "util/template_type.h"
 #include <future>
 #include <vector>
 #include <tuple>
-
-template <typename C>
-struct get_template_type;
-
-template <template <typename > class C, typename T>
-struct get_template_type<C<T>>
-{
-    using type = T;
-};
-template <typename T>
-using get_template_type_t = typename get_template_type<std::remove_reference_t<T>>::type;
 
 struct unknown_execution_tag {};
 struct unknown_future_tag {};
@@ -52,7 +42,7 @@ static shape_type max_shape(const executor_type& ex, const Function& f);
 // returns a future to a tuple-like type containing the values of
 // the given futures. The result becomes ready when all the given futures are ready
 template<class... Futures>
-static future<std::tuple<typename get_template_type<Futures>::type...>> when_all(executor_type& ex, Futures&&... futures);
+static future<std::tuple<typename template_type<Futures>::type...>> when_all(executor_type& ex, Futures&&... futures);
 // single-agent when_all_execute_and_select
 // invokes the function when all the input futures are ready
 // the values of the input futures are passed through to the result future as a tuple.
