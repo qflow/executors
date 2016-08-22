@@ -52,10 +52,13 @@ public:
         return resF;
     }
 
+    template<typename... ChildFutures>
+    using future_tuple = decltype(make_empty_tuple_v<get_template_type_t<ChildFutures>...>());
+
     template<class... Futures>
-    static future_type<std::tuple<get_template_type_t<Futures>...>> when_all(executor_type& ex, Futures&&... futures)
+    static future_type<future_tuple<Futures...>> when_all(executor_type&, Futures&&... futures)
     {
-        using result_type = std::tuple<get_template_type_t<Futures>...>;
+        using result_type = future_tuple<Futures...>;
         using P = std::shared_ptr<promise_type<result_type>>;
         P promise = std::make_shared<promise_type<result_type>>();
         future_type<result_type> future = promise->get_future();

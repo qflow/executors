@@ -152,4 +152,55 @@ constexpr auto apply(Tuple t, F f) {
 }
 
 
+
+template<typename T>
+struct tuple_v
+{
+    using type = std::tuple<T>;
+    type create(T&& arg)
+    {
+        return type(std::forward<T>(arg));
+    }
+    type create()
+    {
+        return type();
+    }
+};
+template<>
+struct tuple_v<void>
+{
+    using type = std::tuple<>;
+    type create()
+    {
+        return type();
+    }
+};
+template<>
+struct tuple_v<char>
+{
+    using type = std::tuple<>;
+    type create(char)
+    {
+        return type();
+    }
+    type create()
+    {
+        return type();
+    }
+};
+
+
+template<typename... T>
+constexpr decltype(auto) make_empty_tuple_v()
+{
+    return std::tuple_cat(tuple_v<T>().create()...);
+}
+template<typename... T>
+constexpr decltype(auto) make_tuple_v(T&&... args)
+{
+    return std::tuple_cat(tuple_v<T>().create(std::forward<T>(args))...);
+}
+
+
+
 #endif
