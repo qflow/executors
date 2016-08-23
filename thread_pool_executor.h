@@ -41,9 +41,10 @@ public:
         ex.enqueueTask(task);
         return fut;
     }
-    template<class Function, class T>
-    static future_type<result_of_friendly_t<Function, T>> then_execute(executor_type& ex, Function&& f, future_type<T>&& fut)
+    template<class Function, class Future>
+    static future_type<result_of_friendly_t<Function, get_template_type_t<Future>>> then_execute(executor_type& ex, Function&& f, Future&& fut)
     {
+        using T = get_template_type_t<Future>;
         using R = result_of_friendly_t<Function, T>;
         using P = std::shared_ptr<promise_type<R>>;
         P promise = std::make_shared<promise_type<R>>();
