@@ -26,28 +26,15 @@ struct tuple_v<void>
         return type();
     }
 };
-template<>
-struct tuple_v<char>
-{
-    using type = std::tuple<>;
-    type create(char)
-    {
-        return type();
-    }
-    type create()
-    {
-        return type();
-    }
-};
 
 
 template<typename... T>
-constexpr auto make_empty_tuple_v() -> decltype (std::tuple_cat(tuple_v<T>().create()...))
+constexpr auto make_empty_tuple_v()
 {
     return std::tuple_cat(tuple_v<T>().create()...);
 }
 template<typename... T>
-constexpr auto make_tuple_v(T&&... args) -> decltype (std::tuple_cat(tuple_v<T>().create(std::forward<T>(args))...))
+constexpr auto make_tuple_v(T&&... args)
 {
     return std::tuple_cat(tuple_v<T>().create(std::forward<T>(args))...);
 }

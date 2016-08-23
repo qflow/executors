@@ -4,7 +4,7 @@
 #include "future.h"
 #include "util/tuple_v.h"
 
-namespace QFlow{
+namespace NAMESPACE{
 using task = std::function<void()>;
 class thread_pool_executor_private;
 class thread_pool_executor
@@ -21,7 +21,7 @@ private:
 }
 
 template<>
-class executor_traits<QFlow::thread_pool_executor>
+class executor_traits<NAMESPACE::thread_pool_executor>
 {
 public:
     using executor_type = QFlow::thread_pool_executor;
