@@ -98,14 +98,19 @@ template< class F, class T>
 using result_of_friendly_t = typename result_of_friendly<F, T>::type;
 
 template<class Function, typename Executor>
-typename executor_traits<Executor>::template future_type<std::result_of_t<Function()>> async_execute(Executor& ex, Function&& f)
+auto async_execute(Executor& ex, Function&& f)
 {
     return executor_traits<Executor>::async_execute(ex, f);
 }
-template<class Function, template<typename> class Future, class T, class Executor>
-typename executor_traits<Executor>::template future_type<result_of_friendly_t<Function, T>> then_execute(Executor& ex, Function&& f, Future<T>&& fut)
+template<class Function, class Future, class Executor>
+auto then_execute(Executor& ex, Function&& f, Future&& fut)
 {
-    return executor_traits<Executor>::then_execute(ex, f, std::forward<Future<T>>(fut));
+    return executor_traits<Executor>::then_execute(ex, f, fut);
+}
+template<class executor_type, class... Futures>
+static auto when_all(executor_type& ex, Futures&&... futures)
+{
+    return executor_traits<executor_type>::when_all(ex, futures...);
 }
 
 template<typename V, typename Function>

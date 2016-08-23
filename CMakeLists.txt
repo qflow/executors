@@ -6,7 +6,6 @@ file(GLOB_RECURSE DATABASE_SRCS
          ${CMAKE_CURRENT_SOURCE_DIR}/*.cpp
          ${CMAKE_CURRENT_SOURCE_DIR}/*.h)
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
-
 add_library(executors STATIC ${DATABASE_SRCS})
 if(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
     target_link_libraries(executors pthread)
