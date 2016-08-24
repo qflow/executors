@@ -4,6 +4,7 @@
 #include "future.h"
 #include "util/tuple_v.h"
 #include "util/for_each.h"
+#include "util/function_traits.h"
 
 namespace NAMESPACE{
 using task = std::function<void()>;
@@ -31,6 +32,9 @@ public:
     using future_type = QFlow::FutureBase<T>;
     template<class T>
     using promise_type = QFlow::Promise<T>;
+    template<class T>
+    using container = std::vector<T>;
+
     template<class Function>
     static future_type<std::result_of_t<Function()>> async_execute(QFlow::thread_pool_executor& ex, Function&& f)
     {
@@ -94,12 +98,44 @@ public:
         std::shared_ptr<result_type> resultTuple = std::make_shared<result_type>();
         std::shared_ptr<std::atomic<size_t>> counter = std::make_shared<std::atomic<size_t>>(sizeof...(futures));
 
-        for_each(futuresTuple, [counter, promise, resultTuple](auto idx, auto&& future){
+        for_each_t(futuresTuple, [counter, promise, resultTuple](auto idx, auto&& future){
             handle_call<get_template_type_t<decltype(future)>, decltype(future), decltype(idx),
                     std::shared_ptr<std::atomic<size_t>>, P, std::shared_ptr<result_type>>()(future, idx, counter, promise, resultTuple);
             return 0;
         });
         return future;
+    }
+
+    template<typename Function, typename Range>
+    static auto for_each(executor_type& ex, Function&& func, Range& range)
+    {
+
+        typedef function_traits<Function> traits;
+        using arg_type = typename traits::template arg<0>::type;
+        using result_type = typename traits::result_type;
+        std::shared_ptr<promise_type<void>> promise = std::make_shared<promise_type<void>>();
+        future_type<void> res_future = promise->get_future();
+        std::shared_ptr<std::atomic<int>> counter = std::make_shared<std::atomic<int>>(0);
+        int c2 = 0;
+        for(auto idx: range)
+        {
+            c2++;
+            std::function<result_type()> a = std::bind(func, idx);
+            future_type<result_type> future = executor_traits<executor_type>::async_execute(ex, a);
+            future.then([counter, promise](auto val){
+                int c = (*counter.get())++;
+                if(c==0)
+                {
+                    promise->set_value();
+                }
+            });
+        }
+        int c = counter->fetch_sub(c2)-c2;
+        if(c ==0)
+        {
+            promise->set_value();
+        }
+        return res_future;
     }
 
 };
