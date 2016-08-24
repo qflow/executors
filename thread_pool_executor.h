@@ -3,6 +3,7 @@
 #include "standard_executor_traits.h"
 #include "future.h"
 #include "util/tuple_v.h"
+#include "util/for_each.h"
 
 namespace NAMESPACE{
 using task = std::function<void()>;
@@ -37,8 +38,7 @@ public:
         using P = std::shared_ptr<promise_type<R>>;
         P p = std::make_shared<promise_type<R>>();
         auto fut = p->get_future();
-        std::function<void()> task = Call<R, Function, P>::get_task(f, p);
-        ex.enqueueTask(task);
+        ex.enqueueTask(std::bind(Call<R, Function, P>::call, f, p));
         return fut;
     }
     template<class Function, class Future>
@@ -94,7 +94,7 @@ public:
         std::shared_ptr<result_type> resultTuple = std::make_shared<result_type>();
         std::shared_ptr<std::atomic<size_t>> counter = std::make_shared<std::atomic<size_t>>(sizeof...(futures));
 
-        apply(futuresTuple, [counter, promise, resultTuple](auto idx, auto&& future){
+        for_each(futuresTuple, [counter, promise, resultTuple](auto idx, auto&& future){
             handle_call<get_template_type_t<decltype(future)>, decltype(future), decltype(idx),
                     std::shared_ptr<std::atomic<size_t>>, P, std::shared_ptr<result_type>>()(future, idx, counter, promise, resultTuple);
             return 0;

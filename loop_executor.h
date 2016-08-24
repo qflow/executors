@@ -39,8 +39,7 @@ public:
         using P = std::shared_ptr<promise_type<R>>;
         P p = std::make_shared<promise_type<R>>();
         auto fut = p->get_future();
-        std::function<void()> task = Call<R, Function, P>::get_task(f, p);
-        ex.enqueueTask(task);
+        ex.enqueueTask(std::bind(Call<R, Function, P>::call, f, p));
         return fut;
     }
     template<class Function, class T>

@@ -5,26 +5,20 @@
 template<typename R, typename Function, typename Promise_ptr>
 struct Call
 {
-static std::function<void()> get_task(Function f, Promise_ptr p)
-{
-    std::function<void()> task = [p, f](){
+    static void call(Function f, Promise_ptr p)
+    {
         auto res = f();
         p->set_value(res);
-    };
-    return task;
-}
+    }
 };
-template<typename F, typename P>
-struct Call<void, F, P>
+template<typename Function, typename Promise_ptr>
+struct Call<void, Function, Promise_ptr>
 {
-static std::function<void()> get_task(F f, P p)
-{
-    std::function<void()> task = [p, f](){
+    static void call(Function f, Promise_ptr p)
+    {
         f();
         p->set_value();
-    };
-    return task;
-}
+    }
 };
 
 template<typename R, typename F, typename P, typename T, typename executor_type>
@@ -111,48 +105,6 @@ template<class executor_type, class... Futures>
 static auto when_all(executor_type& ex, Futures&&... futures)
 {
     return executor_traits<executor_type>::when_all(ex, futures...);
-}
-
-template<typename V, typename Function>
-static int for_each_impl(V&& value, Function&& f)
-{
-    f(std::forward<V>(value));
-    return 0;
-}
-template<typename... Values, typename Function>
-static void for_each(Function&& f, Values&&... values)
-{
-    int arr[sizeof...(values)] = {for_each_impl<Values, Function>(std::forward<Values>(values),
-                                                                  std::forward<Function>(f))...};
-}
-template<typename T, size_t size>
-constexpr bool isSize()
-{
-    return std::tuple_size<T>::value == size;
-}
-
-
-template <class F, size_t... Is>
-constexpr auto index_apply_impl(F f,
-                                std::index_sequence<Is...>) {
-    return std::make_tuple(f(std::integral_constant<size_t, Is>())...);
-}
-
-template <size_t N, class F>
-constexpr auto index_apply(F f) {
-    return index_apply_impl(f, std::make_index_sequence<N>{});
-}
-
-template <class Tuple, class F, size_t... Is>
-constexpr auto apply_impl(Tuple t, F f,
-                          std::index_sequence<Is...>) {
-    return std::make_tuple(f(std::integral_constant<size_t, Is>(), std::get<Is>(t))...);
-}
-
-template <class Tuple, class F>
-constexpr auto apply(Tuple t, F f) {
-    return apply_impl(
-        t, f, std::make_index_sequence<std::tuple_size<Tuple>::value>{});
 }
 
 #endif
