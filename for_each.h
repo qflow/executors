@@ -16,7 +16,6 @@ struct for_each_impl
 {
     static future_type<container<result_type>> for_each(executor_type& ex, Function&& func, Range& range)
     {
-        using arg_type = typename function_traits<Function>::template arg<0>::type;
         std::shared_ptr<promise_type<container<result_type>>> promise =
                 std::make_shared<promise_type<container<result_type>>>();
         future_type<container<result_type>> res_future = promise->get_future();
@@ -55,7 +54,6 @@ struct for_each_impl<Function, Range, executor_type, promise_type, future_type, 
 {
     static future_type<void> for_each(executor_type& ex, Function&& func, Range& range)
     {
-        using arg_type = typename function_traits<Function>::template arg<0>::type;
         std::shared_ptr<promise_type<void>> promise = std::make_shared<promise_type<void>>();
         future_type<void> res_future = promise->get_future();
         std::shared_ptr<std::atomic<int>> counter = std::make_shared<std::atomic<int>>(0);
