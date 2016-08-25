@@ -1,6 +1,6 @@
 #include "future.h"
 
-namespace QFlow{
+namespace qflow{
 Promise<void>::Promise() : d_ptr(new PromisePrivate<void>())
 {
 

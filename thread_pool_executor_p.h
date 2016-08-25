@@ -5,7 +5,7 @@
 #include "loop_executor.h"
 #include <queue>
 
-namespace QFlow{
+namespace qflow{
 using task = std::function<void()>;
 
 class thread_pool_executor_private

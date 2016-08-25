@@ -27,4 +27,7 @@ typedef typename std::tuple_element<i, std::tuple<Args...>>::type type;
 };
 };
 
+template<typename Function>
+using function_result_type  = typename function_traits<Function>::result_type;
+
 #endif

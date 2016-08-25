@@ -1,6 +1,7 @@
 #ifndef STANDARD_EXECUTOR_TRAITS_H
 #define STANDARD_EXECUTOR_TRAITS_H
 #include "executor_traits.h"
+#include <functional>
 
 template<typename R, typename Function, typename Promise_ptr>
 struct Call
@@ -21,13 +22,14 @@ struct Call<void, Function, Promise_ptr>
     }
 };
 
-template<typename R, typename F, typename P, typename T, typename executor_type>
+template<typename R, typename Function, typename P, typename T, typename executor_type>
 struct Call2
 {
-    static std::function<void(T)> get_task(F f, P promise, executor_type& ex)
+    static std::function<void(T)> get_task(Function f, P promise, executor_type& ex)
     {
         std::function<void(T)> task = [&ex, f, promise](T value){
-            auto fut2 = executor_traits<executor_type>::async_execute(ex, std::bind(f, value));
+            std::function<void()> task = std::bind(f, value);
+            auto fut2 = executor_traits<executor_type>::async_execute(ex, task);
             fut2.then([promise](R value2){
                 promise->set_value(value2);
             });
@@ -55,7 +57,8 @@ struct Call2<void, F, P, T, executor_type>
     static std::function<void(T)> get_task(F f, P promise, executor_type& ex)
     {
         std::function<void(T)> task = [&ex, f, promise](T value){
-            auto fut2 = executor_traits<executor_type>::async_execute(ex, std::bind(f, value));
+            std::function<void()> task = std::bind(f, value);
+            auto fut2 = executor_traits<executor_type>::async_execute(ex, task);
             fut2.then([promise](){
                 promise->set_value();
             });
@@ -77,19 +80,6 @@ struct Call2<void, F, P, void, executor_type>
         return task;
     }
 };
-template< class F, class T>
-struct result_of_friendly
-{
-    using type = std::result_of_t<F(T)>;
-};
-
-template< class F>
-struct result_of_friendly<F, void>
-{
-    using type = std::result_of_t<F()>;
-};
-template< class F, class T>
-using result_of_friendly_t = typename result_of_friendly<F, T>::type;
 
 template<class Function, typename Executor>
 auto async_execute(Executor& ex, Function&& f)

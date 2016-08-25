@@ -1,12 +1,14 @@
 #ifndef THREAD_POOL_EXECUTOR_H
 #define THREAD_POOL_EXECUTOR_H
+#include "for_each.h"
+#include "then_execute.h"
 #include "standard_executor_traits.h"
 #include "future.h"
 #include "util/tuple_v.h"
-#include "util/for_each.h"
+#include "util/for_each_t.h"
 #include "util/function_traits.h"
 
-namespace NAMESPACE{
+namespace qflow{
 using task = std::function<void()>;
 class thread_pool_executor_private;
 class thread_pool_executor
@@ -23,26 +25,26 @@ private:
 }
 
 template<>
-class executor_traits<NAMESPACE::thread_pool_executor>
+class executor_traits<qflow::thread_pool_executor>
 {
 public:
-    using executor_type = QFlow::thread_pool_executor;
+    using executor_type = qflow::thread_pool_executor;
     using execution_category = parallel_executor_tag;
     template<class T>
-    using future_type = QFlow::FutureBase<T>;
+    using future_type = qflow::FutureBase<T>;
     template<class T>
-    using promise_type = QFlow::Promise<T>;
+    using promise_type = qflow::Promise<T>;
     template<class T>
     using container = std::vector<T>;
 
     template<class Function>
-    static future_type<std::result_of_t<Function()>> async_execute(QFlow::thread_pool_executor& ex, Function&& f)
+    static future_type<std::result_of_t<Function()>> async_execute(qflow::thread_pool_executor& ex, Function&& f)
     {
         using R = std::result_of_t<Function()>;
         using P = std::shared_ptr<promise_type<R>>;
-        P p = std::make_shared<promise_type<R>>();
-        auto fut = p->get_future();
-        ex.enqueueTask(std::bind(Call<R, Function, P>::call, f, p));
+        P promise = std::make_shared<promise_type<R>>();
+        auto fut = promise->get_future();
+        ex.enqueueTask(std::bind(Call<R, Function, P>::call, f, promise));
         return fut;
     }
     template<class Function, class Future>
@@ -50,12 +52,7 @@ public:
     {
         using T = get_template_type_t<Future>;
         using R = result_of_friendly_t<Function, T>;
-        using P = std::shared_ptr<promise_type<R>>;
-        P promise = std::make_shared<promise_type<R>>();
-        future_type<R> resF = promise->get_future();
-        auto task = Call2<R, Function, P, T, executor_type>::get_task(f, promise, ex);
-        fut.then(task);
-        return resF;
+        return then_execute_impl<executor_type, future_type, promise_type, Function, Future, T, R>::exec(ex, std::forward<Function>(f), fut);
     }
 
     template<typename... ChildFutures>
@@ -107,35 +104,11 @@ public:
     }
 
     template<typename Function, typename Range>
-    static auto for_each(executor_type& ex, Function&& func, Range& range)
+    static future_type<container<function_result_type<Function>>> for_each(executor_type& ex, Function&& func, Range& range)
     {
-
-        typedef function_traits<Function> traits;
-        using arg_type = typename traits::template arg<0>::type;
-        using result_type = typename traits::result_type;
-        std::shared_ptr<promise_type<void>> promise = std::make_shared<promise_type<void>>();
-        future_type<void> res_future = promise->get_future();
-        std::shared_ptr<std::atomic<int>> counter = std::make_shared<std::atomic<int>>(0);
-        int c2 = 0;
-        for(auto idx: range)
-        {
-            c2++;
-            std::function<result_type()> a = std::bind(func, idx);
-            future_type<result_type> future = executor_traits<executor_type>::async_execute(ex, a);
-            future.then([counter, promise](auto val){
-                int c = (*counter.get())++;
-                if(c==0)
-                {
-                    promise->set_value();
-                }
-            });
-        }
-        int c = counter->fetch_sub(c2)-c2;
-        if(c ==0)
-        {
-            promise->set_value();
-        }
-        return res_future;
+        using result_type = function_result_type<Function>;
+        return for_each_impl<Function, Range, executor_type,
+                promise_type, future_type, container, result_type>::for_each(ex, std::forward<Function>(func), range);
     }
 
 };

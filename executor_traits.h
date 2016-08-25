@@ -1,7 +1,6 @@
 #ifndef EXECUTOR_TRAITS_H
 #define EXECUTOR_TRAITS_H
 #include "util/template_type.h"
-#include <future>
 #include <vector>
 #include <tuple>
 

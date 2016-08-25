@@ -8,7 +8,7 @@
 using namespace std;
 
 
-namespace QFlow{
+namespace qflow{
 
 enum class state
 {

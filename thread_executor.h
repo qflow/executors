@@ -17,9 +17,9 @@ public:
     using executor_type = QFlow::thread_executor;
     using execution_category = parallel_executor_tag;
     template<class T>
-    using future_type = QFlow::FutureBase<T>;
+    using future_type = qflow::FutureBase<T>;
     template<class T>
-    using promise_type = QFlow::Promise<T>;
+    using promise_type = qflow::Promise<T>;
     template<class Function>
     static future_type<std::result_of_t<Function()>> async_execute(QFlow::thread_executor& ex, Function&& f)
     {

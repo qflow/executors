@@ -1,12 +1,13 @@
 #ifndef LOOP_EXECUTOR_H
 #define LOOP_EXECUTOR_H
+#include "then_execute.h"
 #include "executors_global.h"
 #include "standard_executor_traits.h"
 #include "future.h"
 #include <functional>
 #include <future>
 
-namespace QFlow{
+namespace qflow{
 
 class loop_executor
 {
@@ -23,15 +24,15 @@ private:
 }
 
 template<>
-class executor_traits<QFlow::loop_executor>
+class executor_traits<qflow::loop_executor>
 {
 public:
-    using executor_type = QFlow::loop_executor;
+    using executor_type = qflow::loop_executor;
     using execution_category = parallel_executor_tag;
     template<class T>
-    using future_type = QFlow::FutureBase<T>;
+    using future_type = qflow::FutureBase<T>;
     template<class T>
-    using promise_type = QFlow::Promise<T>;
+    using promise_type = qflow::Promise<T>;
     template<class Function>
     static future_type<std::result_of_t<Function()>> async_execute(executor_type& ex, Function&& f)
     {

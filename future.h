@@ -6,7 +6,7 @@
 #include <future>
 #include <atomic>
 
-namespace QFlow{
+namespace qflow{
 
 template<typename T>
 class FutureBasePrivate

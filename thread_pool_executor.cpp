@@ -7,7 +7,7 @@
 #include <iostream>
 #include <sstream>
 
-namespace QFlow{
+namespace qflow{
 thread_pool_executor_private::thread_pool_executor_private()
 {
     _mainThread = std::thread(&thread_pool_executor_private::main, this);
