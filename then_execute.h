@@ -7,11 +7,13 @@
 #include <functional>
 #include <atomic>
 
+namespace qflow{
+
 template<typename executor_type, template<typename> class future_type, template<typename> class promise_type,
          class Function, class Future, class T, class R>
-struct then_execute_impl
+struct then_execute_impl_s
 {
-static future_type<R> exec(executor_type& ex, Function&& f, Future&& fut)
+future_type<R> operator ()(executor_type& ex, Function&& f, Future&& fut)
 {
     using P = std::shared_ptr<promise_type<R>>;
     P promise = std::make_shared<promise_type<R>>();
@@ -29,9 +31,9 @@ static future_type<R> exec(executor_type& ex, Function&& f, Future&& fut)
 
 template<typename executor_type, template<typename> class future_type, template<typename> class promise_type,
          class Function, class Future, class T>
-struct then_execute_impl<executor_type, future_type, promise_type, Function, Future, T, void>
+struct then_execute_impl_s<executor_type, future_type, promise_type, Function, Future, T, void>
 {
-static future_type<void> exec(executor_type& ex, Function&& f, Future&& fut)
+future_type<void> operator ()(executor_type& ex, Function&& f, Future&& fut)
 {
     using P = std::shared_ptr<promise_type<void>>;
     P promise = std::make_shared<promise_type<void>>();
@@ -49,9 +51,9 @@ static future_type<void> exec(executor_type& ex, Function&& f, Future&& fut)
 
 template<typename executor_type, template<typename> class future_type, template<typename> class promise_type,
          class Function, class Future, class R>
-struct then_execute_impl<executor_type, future_type, promise_type, Function, Future, void, R>
+struct then_execute_impl_s<executor_type, future_type, promise_type, Function, Future, void, R>
 {
-static future_type<R> exec(executor_type& ex, Function&& f, Future&& fut)
+future_type<R> operator ()(executor_type& ex, Function&& f, Future&& fut)
 {
     using P = std::shared_ptr<promise_type<R>>;
     P promise = std::make_shared<promise_type<R>>();
@@ -68,9 +70,9 @@ static future_type<R> exec(executor_type& ex, Function&& f, Future&& fut)
 
 template<typename executor_type, template<typename> class future_type, template<typename> class promise_type,
          class Function, class Future>
-struct then_execute_impl<executor_type, future_type, promise_type, Function, Future, void, void>
+struct then_execute_impl_s<executor_type, future_type, promise_type, Function, Future, void, void>
 {
-static future_type<void> exec(executor_type& ex, Function&& f, Future&& fut)
+future_type<void> operator ()(executor_type& ex, Function&& f, Future&& fut)
 {
     using P = std::shared_ptr<promise_type<void>>;
     P promise = std::make_shared<promise_type<void>>();
@@ -84,4 +86,10 @@ static future_type<void> exec(executor_type& ex, Function&& f, Future&& fut)
     return resF;
 }
 };
+
+template<typename executor_type, template<typename> class future_type, template<typename> class promise_type,
+         class Function, class Future>
+using then_execute_impl = then_execute_impl_s<executor_type, future_type, promise_type, Function, Future,
+        get_template_type_t<Future>, result_of_friendly_t<Function, get_template_type_t<Future>>>;
+}
 #endif

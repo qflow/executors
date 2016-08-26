@@ -7,14 +7,14 @@
 #include <functional>
 #include <atomic>
 
-//namespace NAMESPACE{
+namespace qflow{
 
 template<typename Function, typename Range, typename executor_type, template <typename> class promise_type,
          template <typename> class future_type, template <typename> class container,
          typename result_type>
-struct for_each_impl
+struct for_each_impl_s
 {
-    static future_type<container<result_type>> for_each(executor_type& ex, Function&& func, Range& range)
+    future_type<container<result_type>> operator()(executor_type& ex, Function&& func, Range& range)
     {
         std::shared_ptr<promise_type<container<result_type>>> promise =
                 std::make_shared<promise_type<container<result_type>>>();
@@ -50,9 +50,9 @@ struct for_each_impl
 
 template<typename Function, typename Range, typename executor_type, template <typename> class promise_type,
          template <typename> class future_type, template <typename> class container>
-struct for_each_impl<Function, Range, executor_type, promise_type, future_type, container, void>
+struct for_each_impl_s<Function, Range, executor_type, promise_type, future_type, container, void>
 {
-    static future_type<void> for_each(executor_type& ex, Function&& func, Range& range)
+    future_type<void> operator ()(executor_type& ex, Function&& func, Range& range)
     {
         std::shared_ptr<promise_type<void>> promise = std::make_shared<promise_type<void>>();
         future_type<void> res_future = promise->get_future();
@@ -61,7 +61,7 @@ struct for_each_impl<Function, Range, executor_type, promise_type, future_type, 
         for(auto idx: range)
         {
             c2++;
-            executor_traits<executor_type>::async_execute(ex, [func, counter, promise](){
+            executor_traits<executor_type>::async_execute(ex, [idx, func, counter, promise](){
                 func(idx);
                 int c = counter->fetch_add(1)+1;
                 if(c==0)
@@ -78,5 +78,10 @@ struct for_each_impl<Function, Range, executor_type, promise_type, future_type, 
         return res_future;
     }
 };
-//}
+
+template<typename Function, typename Range, typename executor_type, template <typename> class promise_type,
+         template <typename> class future_type, template <typename> class container>
+using for_each_impl = for_each_impl_s<Function, Range, executor_type, promise_type, future_type, container, function_result_type<Function>>;
+
+}
 #endif

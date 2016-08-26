@@ -1,11 +1,12 @@
 #ifndef LOOP_EXECUTOR_H
 #define LOOP_EXECUTOR_H
+#include "for_each.h"
 #include "then_execute.h"
+#include "when_all.h"
+#include "async_execute.h"
 #include "executors_global.h"
 #include "standard_executor_traits.h"
 #include "future.h"
-#include <functional>
-#include <future>
 
 namespace qflow{
 
@@ -33,26 +34,28 @@ public:
     using future_type = qflow::FutureBase<T>;
     template<class T>
     using promise_type = qflow::Promise<T>;
+    template<class T>
+    using container = std::vector<T>;
+
     template<class Function>
     static future_type<std::result_of_t<Function()>> async_execute(executor_type& ex, Function&& f)
     {
-        using R = std::result_of_t<Function()>;
-        using P = std::shared_ptr<promise_type<R>>;
-        P p = std::make_shared<promise_type<R>>();
-        auto fut = p->get_future();
-        ex.enqueueTask(std::bind(Call<R, Function, P>::call, f, p));
-        return fut;
+        return qflow::async_execute_impl<executor_type, promise_type, future_type, Function>()(ex, std::forward<Function>(f));
     }
-    template<class Function, class T>
-    static future_type<result_of_friendly_t<Function, T>> then_execute(executor_type& ex, Function&& f, future_type<T>& fut)
+    template<class Function, class Future>
+    static future_type<result_of_friendly_t<Function, get_template_type_t<Future>>> then_execute(executor_type& ex, Function&& f, Future&& fut)
     {
-        using R = result_of_friendly_t<Function, T>;
-        using P = std::shared_ptr<promise_type<R>>;
-        P promise = std::make_shared<promise_type<R>>();
-        future_type<R> resF = promise->get_future();
-        auto task = Call2<R, Function, P, T, executor_type>::get_task(f, promise, ex);
-        fut.then(task);
-        return resF;
+        return qflow::then_execute_impl<executor_type, future_type, promise_type, Function, Future>()(ex, std::forward<Function>(f), fut);
+    }
+    template<class... Futures>
+    static future_type<decltype(make_empty_tuple_v<get_template_type_t<Futures>...>())> when_all(executor_type& ex, Futures&&... futures)
+    {
+        return qflow::when_all_impl<executor_type, promise_type, future_type>()(ex, futures...);
+    }
+    template<typename Function, typename Range>
+    static auto for_each(executor_type& ex, Function&& func, Range& range)
+    {
+        return qflow::for_each_impl<Function, Range, executor_type, promise_type, future_type, container>()(ex, std::forward<Function>(func), range);
     }
 };
 #endif
