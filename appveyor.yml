@@ -2,7 +2,6 @@ platform:
   - x64
 configuration:
   - Release
-environment:
 build:
   project: executors.sln
 before_build:
