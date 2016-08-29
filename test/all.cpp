@@ -1,4 +1,3 @@
-#include <chrono>
 #include "future.h"
 #include "executor_traits.h"
 #include "loop_executor.h"
@@ -8,7 +7,6 @@
 #include <thread>
 #include <vector>
 
-using namespace std::chrono_literals;
 
 int main()
 {
