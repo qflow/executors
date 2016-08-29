@@ -30,18 +30,16 @@ int main()
     for(int i=0;i<1000;i++)
     {
         auto f = async_execute(tpe, [i](){
-            return i;
-        });
-        //futures.push_back(std::move(f));
-
-        auto ff = async_execute(tpe, [i](){
-            return 0;
-        });
-        //futures.push_back(std::move(ff));
-        auto fff = then_execute(tpe, [i](int g){
             return 1;
-        }, ff);
-        fff.wait();
-        int t=0;
+        });
+        auto ff = async_execute(tpe, [i](){
+            return 2;
+        });
+        auto fff = when_all(tpe, f, ff);
+        auto ffff = then_execute(tpe, [](auto arg){
+            return std::get<0>(arg) + std::get<1>(arg);
+        }, fff);
+        int sum = ffff.get();
+        assert(sum == 3);
     }
 }
