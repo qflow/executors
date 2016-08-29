@@ -6,7 +6,7 @@
 #include <iostream>
 #include <thread>
 #include <vector>
-
+#include <cassert>
 
 int main()
 {
@@ -14,12 +14,19 @@ int main()
     qflow::loop_executor executor;
     std::vector<qflow::FutureBase<std::tuple<int, bool>>> futures;
 
-    std::vector<int> range = {1,2,3};
+    std::vector<int> range = {0,1,2,3};
 
-    qflow::FutureBase<void> res = executor_traits<qflow::thread_pool_executor>::for_each(tpe, [](int val){
-        //return val*2;
+    auto future = executor_traits<qflow::thread_pool_executor>::for_each(tpe, [](int val){
+        return val*2;
     }, range);
-    res.get();
+    auto res = future.get();
+    assert(res.size() == range.size());
+    for(size_t i=0;i<res.size();i++)
+    {
+        assert(res[i] == i*2);
+    }
+
+
     for(int i=0;i<1000;i++)
     {
         auto f = async_execute(tpe, [i](){
