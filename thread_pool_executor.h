@@ -1,5 +1,6 @@
 #ifndef THREAD_POOL_EXECUTOR_H
 #define THREAD_POOL_EXECUTOR_H
+#include "executors_export.h"
 #include "for_each.h"
 #include "then_execute.h"
 #include "when_all.h"

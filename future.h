@@ -1,7 +1,7 @@
 #ifndef FUTURE_H
 #define FUTURE_H
 
-#include "executors_global.h"
+#include "executors_export.h"
 #include <functional>
 #include <future>
 #include <atomic>

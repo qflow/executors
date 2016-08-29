@@ -4,7 +4,6 @@
 #include "then_execute.h"
 #include "when_all.h"
 #include "async_execute.h"
-#include "executors_global.h"
 #include "standard_executor_traits.h"
 #include "future.h"
 
