@@ -26,6 +26,20 @@ int main()
         assert(res[i] == i*2);
     }
 
+    std::vector<qflow::FutureBase<int>> vec;
+    for(int i=0;i<1000;i++)
+    {
+        auto f = async_execute(tpe, [i](){
+            return i;
+        });
+        vec.push_back(std::move(f));
+    }
+    for(size_t i=0;i<1000;i++)
+    {
+        auto f = std::move(vec[i]);
+        int res = f.get();
+        assert(res == i);
+    }
 
     for(int i=0;i<1000;i++)
     {
