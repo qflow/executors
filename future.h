@@ -9,10 +9,10 @@
 namespace qflow{
 
 template<typename T>
-class FutureBasePrivate
+class future_private
 {
 public:
-    FutureBasePrivate() : _isReady(false)
+    future_private() : _isReady(false)
     {
 
     }
@@ -32,10 +32,10 @@ public:
     T _value;
 };
 template<>
-class FutureBasePrivate<void>
+class future_private<void>
 {
 public:
-    FutureBasePrivate() : _isReady(false)
+    future_private() : _isReady(false)
     {
 
     }
@@ -54,61 +54,61 @@ public:
 };
 
 template<typename T>
-class FutureBase;
+class future;
 
 template<>
-class FutureBase<void>;
+class future<void>;
 
 template<typename T>
-class PromisePrivate
+class promise_private
 {
 public:
     std::promise<T> _internal;
-    std::shared_ptr<FutureBasePrivate<T>> _future;
+    std::shared_ptr<future_private<T>> _future;
 };
 
 template<typename T>
-class Promise
+class promise
 {
 public:
-    Promise();
-    Promise(const Promise<T>& other) = delete;
-    Promise(Promise<T>&& other);
-    FutureBase<T> get_future();
+    promise();
+    promise(const promise<T>& other) = delete;
+    promise(promise<T>&& other);
+    future<T> get_future();
     void set_value( const T& value );
 private:
-    std::unique_ptr<PromisePrivate<T>> d_ptr;
+    std::unique_ptr<promise_private<T>> d_ptr;
 };
 template<>
-class Promise<void>
+class promise<void>
 {
 public:
-    Promise();
-    Promise(const Promise<void>& other) = delete;
-    Promise(Promise<void>&& other);
-    FutureBase<void> get_future();
+    promise();
+    promise(const promise<void>& other) = delete;
+    promise(promise<void>&& other);
+    future<void> get_future();
     void set_value();
 private:
-    std::unique_ptr<PromisePrivate<void>> d_ptr;
+    std::unique_ptr<promise_private<void>> d_ptr;
 };
 
 template<typename T>
-class FutureBase
+class future
 {
-    friend class Promise<T>;
+    friend class promise<T>;
     using value_type = T;
 public:
-    FutureBase() : d_ptr(new FutureBasePrivate<T>())
+    future() : d_ptr(new future_private<T>())
     {
 
     }
-    FutureBase(const FutureBase& other) = delete;
-    FutureBase(FutureBase&& other) : FutureBase()
+    future(const future& other) = delete;
+    future(future&& other) : future()
     {
         d_ptr = std::move(other.d_ptr);
     }
 
-    FutureBase(std::future<T>&& other) : FutureBase()
+    future(std::future<T>&& other) : future()
     {
         d_ptr->_stdFuture = std::move(other);
     }
@@ -130,7 +130,7 @@ public:
         return d_ptr->_stdFuture.get();
     }
     template<typename Func, typename R = std::result_of_t<Func(T)>>
-    FutureBase<R> then(Func&& func);
+    future<R> then(Func&& func);
 protected:
     void set_value(T value)
     {
@@ -138,23 +138,23 @@ protected:
     }
 
 
-    std::shared_ptr<FutureBasePrivate<T>> d_ptr;
+    std::shared_ptr<future_private<T>> d_ptr;
 };
 template<>
-class FutureBase<void>
+class future<void>
 {
-    friend class Promise<void>;
+    friend class promise<void>;
 public:
-    FutureBase() : d_ptr(new FutureBasePrivate<void>())
+    future() : d_ptr(new future_private<void>())
     {
 
     }
-    FutureBase(std::future<void>&& other) : FutureBase()
+    future(std::future<void>&& other) : future()
     {
         d_ptr->_stdFuture = std::move(other);
     }
-    FutureBase(const FutureBase& other) = delete;
-    FutureBase(FutureBase&& other) : FutureBase()
+    future(const future& other) = delete;
+    future(future&& other) : future()
     {
         d_ptr = std::move(other.d_ptr);
     }
@@ -167,61 +167,61 @@ public:
         d_ptr->_stdFuture.wait();
     }
     template<typename Func, typename R = std::result_of_t<Func()>>
-    FutureBase<R> then(Func&& func);
+    future<R> then(Func&& func);
 protected:
     void set_value()
     {
         d_ptr->set_value();
 
     }
-    std::shared_ptr<FutureBasePrivate<void>> d_ptr;
+    std::shared_ptr<future_private<void>> d_ptr;
 };
 
 template<typename T>
-Promise<T>::Promise() : d_ptr(new PromisePrivate<T>())
+promise<T>::promise() : d_ptr(new promise_private<T>())
 {
 
 }
 template<typename T>
-Promise<T>::Promise(Promise<T>&& other) : d_ptr(std::move(other.d_ptr))
+promise<T>::promise(promise<T>&& other) : d_ptr(std::move(other.d_ptr))
 {
 
 }
 template<typename T>
-FutureBase<T> Promise<T>::get_future()
+future<T> promise<T>::get_future()
 {
     std::future<T> stdFuture = d_ptr->_internal.get_future();
-    FutureBase<T> ret(std::move(stdFuture));
+    future<T> ret(std::move(stdFuture));
     d_ptr->_future = ret.d_ptr;
     return ret;
 }
 template<typename T>
-void Promise<T>::set_value( const T& value )
+void promise<T>::set_value( const T& value )
 {
     d_ptr->_internal.set_value(value);
     d_ptr->_future->set_value(value);
 }
 
 template<typename R, typename T, typename Func>
-void call(std::shared_ptr<Promise<R>> promise, Func&& func, T value)
+void call(std::shared_ptr<promise<R>> promise, Func&& func, T value)
 {
     R resVal = func(value);
     promise->set_value(resVal);
 }
 template<typename R, typename Func>
-void call(std::shared_ptr<Promise<R>> promise, Func&& func)
+void call(std::shared_ptr<promise<R>> promise, Func&& func)
 {
     R resVal = func();
     promise->set_value(resVal);
 }
 template<typename T, typename Func>
-void call(std::shared_ptr<Promise<void>> promise, Func&& func, T value)
+void call(std::shared_ptr<promise<void>> promise, Func&& func, T value)
 {
     func(value);
     promise->set_value();
 }
 template<typename Func>
-void call(std::shared_ptr<Promise<void>> promise, Func&& func)
+void call(std::shared_ptr<promise<void>> promise, Func&& func)
 {
     func();
     promise->set_value();
@@ -229,41 +229,42 @@ void call(std::shared_ptr<Promise<void>> promise, Func&& func)
 
 template<typename T>
 template<typename Func, typename R>
-FutureBase<R> FutureBase<T>::then(Func&& func)
+future<R> future<T>::then(Func&& func)
 {
-    auto promise = std::make_shared<Promise<R>>();
-    FutureBase<R> future = promise->get_future();
+    auto p = std::make_shared<promise<R>>();
+    future<R> future = p->get_future();
     while (d_ptr->_readyLock.test_and_set(std::memory_order_acquire));
     if(d_ptr->_isReady)
     {
-        call(promise, func, d_ptr->_value);
+        call(p, func, d_ptr->_value);
     }
     else
     {
-        d_ptr->_onReady = [promise,func](T value){
-            call(promise, func, value);
+        d_ptr->_onReady = [p,func](T value){
+            call(p, func, value);
         };
     }
     d_ptr->_readyLock.clear();
     return future;
 }
 template<typename Func, typename R>
-FutureBase<R> FutureBase<void>::then(Func&& func)
+future<R> future<void>::then(Func&& func)
 {
-    auto promise = std::make_shared<Promise<R>>();
-    FutureBase<R> future = promise->get_future();
+    auto p = std::make_shared<promise<R>>();
+    future<R> future = p->get_future();
     while (d_ptr->_readyLock.test_and_set(std::memory_order_acquire));
     if(d_ptr->_isReady)
     {
-        call(promise, func);
+        d_ptr->_readyLock.clear();
+        call(p, func);
     }
     else
     {
-        d_ptr->_onReady = [promise,func](){
-            call(promise, func);
+        d_ptr->_onReady = [p,func](){
+            call(p, func);
         };
+        d_ptr->_readyLock.clear();
     }
-    d_ptr->_readyLock.clear();
     return future;
 }
 }

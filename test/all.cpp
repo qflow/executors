@@ -7,12 +7,13 @@
 #include <thread>
 #include <vector>
 #include <cassert>
+#include <type_traits>
 
 int main()
 {
-    qflow::thread_pool_executor tpe(2);
+    qflow::thread_pool_executor tpe(20);
     qflow::loop_executor executor;
-    std::vector<qflow::FutureBase<std::tuple<int, bool>>> futures;
+    std::vector<qflow::future<std::tuple<int, bool>>> futures;
 
     std::vector<int> range = {0,1,2,3};
 
@@ -26,7 +27,7 @@ int main()
         assert(res[i] == i*2);
     }
 
-    std::vector<qflow::FutureBase<int>> vec;
+    std::vector<qflow::future<int>> vec;
     for(int i=0;i<1000;i++)
     {
         auto f = async_execute(tpe, [i](){
@@ -49,7 +50,9 @@ int main()
         auto ff = async_execute(tpe, [i](){
             return 2;
         });
-        auto fff = when_all(tpe, f, ff);
+        auto f_void = async_execute(tpe, [i](){
+        });
+        qflow::future<std::tuple<int, int>> fff = when_all(tpe, f, ff, f_void);
         auto ffff = then_execute(tpe, [](auto arg){
             return std::get<0>(arg) + std::get<1>(arg);
         }, fff);

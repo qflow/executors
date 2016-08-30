@@ -30,9 +30,9 @@ public:
     using executor_type = qflow::loop_executor;
     using execution_category = parallel_executor_tag;
     template<class T>
-    using future_type = qflow::FutureBase<T>;
+    using future_type = qflow::future<T>;
     template<class T>
-    using promise_type = qflow::Promise<T>;
+    using promise_type = qflow::promise<T>;
     template<class T>
     using container = std::vector<T>;
 
