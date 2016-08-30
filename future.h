@@ -21,8 +21,12 @@ public:
         while (_readyLock.test_and_set(std::memory_order_acquire));
         _value = value;
         _isReady = true;
-        if(_onReady) _onReady(value);
-        _readyLock.clear();
+        if(_onReady)
+        {
+            _readyLock.clear();
+            _onReady(value);
+        }
+        else _readyLock.clear();
     }
 
     std::future<T> _stdFuture;
@@ -43,8 +47,12 @@ public:
     {
         while (_readyLock.test_and_set(std::memory_order_acquire));
         _isReady = true;
-        if(_onReady) _onReady();
-        _readyLock.clear();
+        if(_onReady)
+        {
+            _readyLock.clear();
+            _onReady();
+        }
+        else _readyLock.clear();
 
     }
     std::future<void> _stdFuture;
@@ -236,6 +244,7 @@ future<R> future<T>::then(Func&& func)
     while (d_ptr->_readyLock.test_and_set(std::memory_order_acquire));
     if(d_ptr->_isReady)
     {
+        d_ptr->_readyLock.clear();
         call(p, func, d_ptr->_value);
     }
     else
@@ -243,8 +252,8 @@ future<R> future<T>::then(Func&& func)
         d_ptr->_onReady = [p,func](T value){
             call(p, func, value);
         };
+        d_ptr->_readyLock.clear();
     }
-    d_ptr->_readyLock.clear();
     return future;
 }
 template<typename Func, typename R>
