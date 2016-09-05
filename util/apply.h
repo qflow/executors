@@ -2,6 +2,7 @@
 #define APPLY_H
 
 #include <tuple>
+#include <executors/util/function_traits.h>
 
 template <class Tuple, class F, size_t... Is>
 constexpr auto apply_impl(Tuple t, F f,
