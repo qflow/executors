@@ -6,6 +6,7 @@
 #include <vector>
 #include <util/function_traits.h>
 #include <memory>
+#include <util/adapters.h>
 
 namespace qflow{
 
@@ -57,10 +58,9 @@ public:
     variant_type invoke(std::vector<variant_type> args = std::vector<variant_type>())
     {
         using arg_types = typename function_traits<Function>::args;
-        arg_types at;
         using result_type = typename function_traits<Function>::result_type;
         apply<result_type, variant_type> a;
-        return a.exec<arg_types>(args, std::make_index_sequence<std::tuple_size<arg_types>::value>{}, func);
+        return a.template exec<arg_types>(args, std::make_index_sequence<std::tuple_size<arg_types>::value>{}, func);
 
     }
     Function func;
