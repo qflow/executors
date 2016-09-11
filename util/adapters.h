@@ -10,7 +10,7 @@ namespace adapters
     template<typename A, typename B>
     A as(B b)
     {
-        return adapter<A, B>::convert(b);
+        return adapter<A, B>::convert(std::forward<B>(b));
     }
 }
 
