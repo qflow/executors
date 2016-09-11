@@ -32,6 +32,7 @@ int main()
             assert(i == 5);
             return 11;
     });
+    
     std::vector<linb::any> v = {std::string("ahoj"), 5};
     linb::any a = functor.invoke(v);
     assert(linb::any_cast<int>(a) == 11);

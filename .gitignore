@@ -4,3 +4,4 @@
 *.orig
 *.kdev4
 build
+.vscode
