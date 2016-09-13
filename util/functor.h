@@ -1,12 +1,14 @@
 #ifndef FUNCTOR_H
 #define FUNCTOR_H
 
-
+#include <tuple>
+#include <utility>
 #include <functional>
 #include <vector>
 #include <util/function_traits.h>
 #include <memory>
 #include <util/adapters.h>
+#include <cassert>
 
 namespace qflow{
 
@@ -38,8 +40,33 @@ public:
     virtual variant_type invoke(std::vector<variant_type> args = std::vector<variant_type>()) = 0;
 
 };
-template<typename variant_type, typename Function>
+template<typename variant_type, typename T, typename Enable = void>
 class functor_impl : public functor<variant_type>
+{
+public:
+    functor_impl(T&&)
+    {
+
+    }
+    functor_impl(const functor_impl<variant_type, T>&)
+    {
+
+    }
+    functor_impl(functor_impl&&)
+    {
+
+    }
+
+    variant_type invoke(std::vector<variant_type> args = std::vector<variant_type>())
+    {
+        assert(false);
+        return variant_type();
+    }
+};
+
+
+template<typename variant_type, typename Function>
+class functor_impl<variant_type, Function, std::enable_if_t<function_traits<Function>::is_callable>> : public functor<variant_type>
 {
 public:
     functor_impl(Function&& f) : func(f)

@@ -13,6 +13,7 @@ template <typename ClassType, typename ReturnType, typename... Args>
 struct function_traits<ReturnType(ClassType::*)(Args...) const>
 // we specialize for pointers to member function
 {
+    static constexpr bool is_callable = true;
 using args = std::tuple<Args...>;
 enum { arity = sizeof...(Args) };
 // arity is the number of arguments.
