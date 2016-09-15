@@ -48,15 +48,6 @@ public:
     {
 
     }
-    functor_impl(const functor_impl<variant_type, T>&)
-    {
-
-    }
-    functor_impl(functor_impl&&)
-    {
-
-    }
-
     variant_type invoke(std::vector<variant_type> args = std::vector<variant_type>())
     {
         assert(false);
@@ -73,15 +64,6 @@ public:
     {
 
     }
-    functor_impl(const functor_impl<variant_type, Function>& other) : func(other.func)
-    {
-
-    }
-    functor_impl(functor_impl&& other) : func(std::move(other.func))
-    {
-
-    }
-
     variant_type invoke(std::vector<variant_type> args = std::vector<variant_type>())
     {
         using arg_types = typename function_traits<Function>::args;
