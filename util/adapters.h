@@ -3,7 +3,7 @@
 
 namespace adapters
 {
-    template<typename A, typename B>
+    template<typename A, typename B, typename Enable = void>
     struct adapter
     {
     };
