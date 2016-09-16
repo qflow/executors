@@ -82,6 +82,7 @@ public:
     promise();
     promise(const promise<T>& other) = delete;
     promise(promise<T>&& other);
+    promise<T>& operator=(promise<T>&& other);
     future<T> get_future();
     void set_value( const T& value );
 private:
@@ -94,6 +95,7 @@ public:
     promise();
     promise(const promise<void>& other) = delete;
     promise(promise<void>&& other);
+    promise<void>& operator=(promise<void>&& other);
     future<void> get_future();
     void set_value();
 private:
@@ -195,6 +197,13 @@ promise<T>::promise(promise<T>&& other) : d_ptr(std::move(other.d_ptr))
 {
 
 }
+template<typename T>
+promise<T>& promise<T>::operator=(promise<T>&& other)
+{
+    d_ptr = std::move(other.d_ptr);
+    return *this;
+}
+
 template<typename T>
 future<T> promise<T>::get_future()
 {

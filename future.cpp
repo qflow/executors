@@ -9,6 +9,12 @@ promise<void>::promise(promise<void>&& other) : d_ptr(std::move(other.d_ptr))
 {
 
 }
+promise<void>& promise<void>::operator=(promise<void>&& other)
+{
+    d_ptr = std::move(other.d_ptr);
+    return *this;
+}
+
 void promise<void>::set_value()
 {
     d_ptr->_internal.set_value();

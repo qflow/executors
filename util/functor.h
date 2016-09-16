@@ -48,7 +48,7 @@ public:
     {
 
     }
-    variant_type invoke(std::vector<variant_type> args = std::vector<variant_type>())
+    variant_type invoke(std::vector<variant_type>)
     {
         assert(false);
         return variant_type();
