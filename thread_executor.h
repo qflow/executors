@@ -1,7 +1,7 @@
 #include "executor_traits.h"
 #include "future.h"
 
-namespace QFlow{
+namespace qflow{
 class thread_executor
 {
 public:
@@ -11,17 +11,17 @@ public:
 }
 
 template<>
-class executor_traits<QFlow::thread_executor>
+class executor_traits<qflow::thread_executor>
 {
 public:
-    using executor_type = QFlow::thread_executor;
+    using executor_type = qflow::thread_executor;
     using execution_category = parallel_executor_tag;
     template<class T>
     using future_type = qflow::future<T>;
     template<class T>
     using promise_type = qflow::promise<T>;
     template<class Function>
-    static future_type<std::result_of_t<Function()>> async_execute(QFlow::thread_executor& ex, Function&& f)
+    static future_type<std::result_of_t<Function()>> async_execute(qflow::thread_executor& ex, Function&& f)
     {
         auto p = std::make_shared<promise_type<std::result_of_t<Function()>>>();
         auto fut = p->get_future();

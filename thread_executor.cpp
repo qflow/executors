@@ -1,7 +1,7 @@
 #include "thread_executor.h"
 #include <thread>
 
-namespace QFlow{
+namespace qflow{
 void thread_executor::enqueueTask(task t)
 {
     std::async(t);
