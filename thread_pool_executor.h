@@ -60,4 +60,9 @@ public:
         return qflow::for_each_impl<Function, Range, executor_type, promise_type, future_type, container>()(ex, std::forward<Function>(func), range);
     }
 };
+template<>
+struct is_executor<qflow::thread_pool_executor> : std::true_type
+{
+
+};
 #endif
