@@ -6,6 +6,7 @@ namespace adapters
     template<typename A, typename B, typename Enable = void>
     struct adapter
     {
+        static A convert(B b);
     };
     template<typename A, typename B>
     A as(B b)
