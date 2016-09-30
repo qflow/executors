@@ -19,10 +19,9 @@ class thread_pool_executor
 public:
     EXECUTORS_EXPORT thread_pool_executor(size_t num_threads = 10);
     ~thread_pool_executor();
-    thread_pool_executor(const thread_pool_executor& other);
     void enqueueTask(task t);
 private:
-    const std::shared_ptr<thread_pool_executor_private> d_ptr;
+    const std::unique_ptr<thread_pool_executor_private> d_ptr;
 };
 }
 

@@ -71,10 +71,6 @@ thread_pool_executor::~thread_pool_executor()
 {
 
 }
-thread_pool_executor::thread_pool_executor(const thread_pool_executor& other) : d_ptr(other.d_ptr)
-{
-
-}
 
 void thread_pool_executor::enqueueTask(task t)
 {
