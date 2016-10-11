@@ -139,6 +139,11 @@ public:
     {
         return d_ptr->_stdFuture.get();
     }
+    bool is_ready()
+    {
+        return d_ptr->_is_ready;
+    }
+
     template<typename Func, typename R = std::result_of_t<Func(T)>>
     future<R> then(Func&& func);
 protected:
@@ -285,6 +290,27 @@ future<R> future<void>::then(Func&& func)
     }
     return future;
 }
+template<class _Ty>
+_Ty await_resume(qflow::future<_Ty>& _Fut)
+{
+    return (_Fut.get());
+}
+template<class _Ty>
+bool await_ready(qflow::future<_Ty>& _Fut)
+{
+    return (_Fut.is_ready());
+}
+/*template<class _Ty>
+    void await_suspend(qflow::future<_Ty>& _Fut,
+        experimental::coroutine_handle<> _ResumeCb)
+    {	// change to .then when future gets .then
+    thread _WaitingThread([&_Fut, _ResumeCb]{
+        _Fut.wait();
+        _ResumeCb();
+    });
+    _WaitingThread.detach();
+    }*/
+
 }
 
 #endif // FUTURE_H
