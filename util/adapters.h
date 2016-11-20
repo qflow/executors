@@ -1,6 +1,8 @@
 #ifndef ADAPTERS_H
 #define ADAPTERS_H
 
+#include <utility>
+
 namespace adapters
 {
     template<typename A, typename B, typename Enable = void>
