@@ -6,7 +6,7 @@
 #include <future>
 #include <atomic>
 
-namespace qflow{
+namespace qflow {
 
 template<typename T>
 class future_private
@@ -85,19 +85,73 @@ public:
     promise<T>& operator=(promise<T>&& other);
     future<T> get_future();
     void set_value( const T& value );
+    void set_exception( std::exception_ptr p )
+    {
+        d_ptr->_internal.set_exception(p);
+    }
 private:
     std::unique_ptr<promise_private<T>> d_ptr;
+};
+template<>
+class future<void>
+{
+    friend class promise<void>;
+public:
+    future() : d_ptr(new future_private<void>())
+    {
+
+    }
+    future(std::future<void>&& other) : future()
+    {
+        d_ptr->_stdFuture = std::move(other);
+    }
+    future(const future& other) = delete;
+    future(future&& other) : future()
+    {
+        d_ptr = std::move(other.d_ptr);
+    }
+    void get()
+    {
+        d_ptr->_stdFuture.get();
+    }
+    void wait() const
+    {
+        d_ptr->_stdFuture.wait();
+    }
+    template<typename Func, typename R = std::result_of_t<Func()>>
+    future<R> then(Func&& func);
+protected:
+    void set_value()
+    {
+        d_ptr->set_value();
+
+    }
+    std::shared_ptr<future_private<void>> d_ptr;
 };
 template<>
 class promise<void>
 {
 public:
-    promise();
+    promise() : d_ptr(new promise_private<void>()) {}
+    promise(promise<void>&& other) : d_ptr(std::move(other.d_ptr)) {}
     promise(const promise<void>& other) = delete;
-    promise(promise<void>&& other);
-    promise<void>& operator=(promise<void>&& other);
-    future<void> get_future();
-    void set_value();
+    promise<void>& operator=(promise<void>&& other)
+    {
+        d_ptr = std::move(other.d_ptr);
+        return *this;
+    }
+    future<void> get_future()
+    {
+        std::future<void> stdFuture = d_ptr->_internal.get_future();
+        future<void> ret(std::move(stdFuture));
+        d_ptr->_future = ret.d_ptr;
+        return ret;
+    }
+    void set_value()
+    {
+        d_ptr->_internal.set_value();
+        d_ptr->_future->set_value();
+    }
 private:
     std::unique_ptr<promise_private<void>> d_ptr;
 };
@@ -154,42 +208,6 @@ protected:
 
 
     std::shared_ptr<future_private<T>> d_ptr;
-};
-template<>
-class future<void>
-{
-    friend class promise<void>;
-public:
-    future() : d_ptr(new future_private<void>())
-    {
-
-    }
-    future(std::future<void>&& other) : future()
-    {
-        d_ptr->_stdFuture = std::move(other);
-    }
-    future(const future& other) = delete;
-    future(future&& other) : future()
-    {
-        d_ptr = std::move(other.d_ptr);
-    }
-    void get()
-    {
-        d_ptr->_stdFuture.get();
-    }
-    void wait() const
-    {
-        d_ptr->_stdFuture.wait();
-    }
-    template<typename Func, typename R = std::result_of_t<Func()>>
-    future<R> then(Func&& func);
-protected:
-    void set_value()
-    {
-        d_ptr->set_value();
-
-    }
-    std::shared_ptr<future_private<void>> d_ptr;
 };
 
 template<typename T>
@@ -263,7 +281,7 @@ future<R> future<T>::then(Func&& func)
     }
     else
     {
-        d_ptr->_onReady = [p,func](T value){
+        d_ptr->_onReady = [p,func](T value) {
             call(p, func, value);
         };
         d_ptr->_readyLock.clear();
@@ -283,7 +301,7 @@ future<R> future<void>::then(Func&& func)
     }
     else
     {
-        d_ptr->_onReady = [p,func](){
+        d_ptr->_onReady = [p,func]() {
             call(p, func);
         };
         d_ptr->_readyLock.clear();
